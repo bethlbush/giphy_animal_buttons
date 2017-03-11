@@ -1,72 +1,83 @@
-var topics = ["MacGyver", "The A-Team", "The Dukes of Hazzard", "Knight Rider", "Mork and Mindy",
-    "Three's Company", "Diff'rent Strokes"
-];
 $(document).ready(function() {
-	//make a new button for each item in the array
-    for (i = 0; i < topics.length; i++) {
 
-        $("#buttons").append("<button>" + topics[i] + "</button><br><br>")
+    var topics = ["wolf", "weasel", "opposum",
+        "fox", "loris", "rat", "guinea pig"
+    ];
 
-    };
 
-	//upon clicking thd "submit" button, prepend a new button to the page
+    //upon clicking the "submit" button, prepend a new button to the array
     $("#submit").on("click", function(event) {
         // prevent form from trying to submit/refresh the page
         event.preventDefault();
-        var tvShow = $("#yourShow").val().trim();
-        console.log(tvShow);
-        topics.push(tvShow);
-        $("#buttons").prepend("<button>" +tvShow+ "</button><br><br>");
+        //store value of user input animal
+        var newAnimal = $("#yourAnimal").val().trim();
+        console.log(newAnimal);
+        //push the new animal to the array
+        topics.push(newAnimal);
+        //add new animal button to the DOM
+        $("#buttons").prepend("<button>" + newAnimal + "</button><br><br>");
+        //add data-Animal attribute to the button
+        $("button").attr("data-Animal", newAnimal);
     });
 
+    //make a button for each item in the array
+    for (i = 0; i < topics.length; i++) {
+        console.log(topics[i]);
+        var animal = topics[i]
+        //add button to the DOM
+        $("#buttons").append("<button>" + animal + "</button><br><br>")
+        //add data-Animal attribute to the button
+        $("button").attr("data-Animal", animal);
+    };
 
 
+//on clicking a button, grab the data-Animal
+$("button").on("click", function() {
+//declare the variable "animal" by getting the data-Animal attribute fom the button clicked 
+var animal = $(this).attr("data-Animal");
+//set up the query to send to giphy.com
+var queryURL = "http://api.giphy.com/v1/gifs/search?q=" +
+    animal + "&api_key=dc6zaTOxFJmzC&limit=10";
 
-    $("button").on("click", function() {
-        var TVshow = $(this).attr("data-TVshow");
+//AJAX GET request
+$.ajax({
+        url: queryURL,
+        method: "GET"
+    })
+    // After the data comes back from the API
+    .done(function(response) {
+        // Storing an array of results in the results variable
+        var results = response.data;
 
-        var queryURL = "http://api.giphy.com/v1/gifs/search?q=" +
-            TVshow + "&api_key=dc6zaTOxFJmzC&limit=10";
+        // Looping over every result item
+        for (var i = 0; i < results.length; i++) {
 
-        //AJAX GET request
-        $.ajax({
-                url: queryURL,
-                method: "GET"
-            })
-            // After the data comes back from the API
-            .done(function(response) {
-                // Storing an array of results in the results variable
-                var results = response.data;
+            // Only taking action if the photo has an appropriate rating
+            if (results[i].rating !== "r" && results[i].rating !== "pg-13") {
+                // Creating a div with the class "item"
+                var gifDiv = $("<div class='item'>");
 
-                // Looping over every result item
-                for (var i = 0; i < results.length; i++) {
+                // Storing the result item's rating
+                var rating = results[i].rating;
 
-                    // Only taking action if the photo has an appropriate rating
-                    if (results[i].rating !== "r" && results[i].rating !== "pg-13") {
-                        // Creating a div with the class "item"
-                        var gifDiv = $("<div class='item'>");
+                // Creating a paragraph tag with the result item's rating
+                var p = $("<p>").text("Rating: " + rating);
 
-                        // Storing the result item's rating
-                        var rating = results[i].rating;
+                // Creating an image tag
+                var animalImage = $("<img>");
 
-                        // Creating a paragraph tag with the result item's rating
-                        var p = $("<p>").text("Rating: " + rating);
+                // Giving the image tag an src attribute of a proprty pulled off the
+                // result item
+                animalImage.attr("src", results[i].images.fixed_height.url);
 
-                        // Creating an image tag
-                        var personImage = $("<img>");
+                // Appending the paragraph and insectImage we created to the "gifDiv" div we created
+                gifDiv.append(p);
+                gifDiv.append(animalImage);
 
-                        // Giving the image tag an src attribute of a proprty pulled off the
-                        // result item
-                        personImage.attr("src", results[i].images.fixed_height.url);
-
-                        // Appending the paragraph and personImage we created to the "gifDiv" div we created
-                        gifDiv.append(p);
-                        gifDiv.append(personImage);
-
-                        // Prepending the gifDiv to the "#gifs-appear-here" div in the HTML
-                        $("#gifs-appear-here").prepend(gifDiv);
-                    };
-                };
-            });
+                // Prepending the gifDiv to the "#gifs-appear-here" div in the HTML
+                $("#gifs-appear-here").prepend(gifDiv);
+            };
+        };
     });
+});
 });
